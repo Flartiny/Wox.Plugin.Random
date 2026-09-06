@@ -1,0 +1,13 @@
+[project]
+name = "wox-plugin-random"
+version = "1.0.0"
+description = "Wox plugin: random number/string/port generator with profiles and no-repeat history"
+requires-python = ">=3.10"
+dependencies = ["wox-plugin>=0.0.86"]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

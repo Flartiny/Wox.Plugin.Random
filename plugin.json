@@ -1,0 +1,142 @@
+{
+  "Id": "b9f07c54-361c-42c2-93ce-77fe69005175",
+  "Name": "Random",
+  "Description": "i18n:plugin_description",
+  "Author": "Flartiny",
+  "Version": "1.0.0",
+  "MinWoxVersion": "2.0.0",
+  "Runtime": "python",
+  "Entry": "main.py",
+  "Icon": "emoji:🎲",
+  "TriggerKeywords": ["rand", "random"],
+  "SupportedOS": ["Windows", "Darwin", "Linux"],
+  "Website": "",
+  "Commands": [
+    {
+      "Command": "history",
+      "Description": "i18n:cmd_history_desc"
+    },
+    {
+      "Command": "reset",
+      "Description": "i18n:cmd_reset_desc"
+    }
+  ],
+  "SettingDefinitions": [
+    {
+      "Type": "head",
+      "Value": {
+        "Content": "i18n:setting_profiles_title",
+        "Tooltip": "i18n:setting_profiles_tooltip"
+      }
+    },
+    {
+      "Type": "table",
+      "Value": {
+        "Key": "Profiles",
+        "Title": "i18n:setting_profiles_title",
+        "SortColumnKey": "Name",
+        "SortOrder": "asc",
+        "MaxHeight": 500,
+        "DefaultValue": "[{\"Name\":\"Integer demo\",\"Type\":\"integer\",\"Min\":\"1\",\"Max\":\"100\",\"Decimals\":\"\",\"Length\":\"\",\"Charset\":\"\",\"CustomChars\":\"\",\"NoRepeat\":true}]",
+        "Columns": [
+          {
+            "Key": "Name",
+            "Label": "i18n:col_name",
+            "Type": "text",
+            "Width": 120,
+            "Validators": [{ "Type": "not_empty", "Value": {} }]
+          },
+          {
+            "Key": "Type",
+            "Label": "i18n:col_type",
+            "Type": "select",
+            "Width": 80,
+            "SelectOptions": [
+              { "Label": "i18n:type_integer", "Value": "integer" },
+              { "Label": "i18n:type_decimal", "Value": "decimal" },
+              { "Label": "i18n:type_string", "Value": "string" },
+              { "Label": "i18n:type_uuid", "Value": "uuid" },
+              { "Label": "i18n:type_port", "Value": "port" }
+            ]
+          },
+          {
+            "Key": "Min",
+            "Label": "i18n:col_min",
+            "Type": "text",
+            "Width": 70,
+            "Tooltip": "i18n:col_minmax_tooltip"
+          },
+          {
+            "Key": "Max",
+            "Label": "i18n:col_max",
+            "Type": "text",
+            "Width": 70,
+            "Tooltip": "i18n:col_minmax_tooltip"
+          },
+          {
+            "Key": "Decimals",
+            "Label": "i18n:col_decimals",
+            "Type": "text",
+            "Width": 60,
+            "Tooltip": "i18n:col_decimals_tooltip"
+          },
+          {
+            "Key": "Length",
+            "Label": "i18n:col_length",
+            "Type": "text",
+            "Width": 60,
+            "Tooltip": "i18n:col_length_tooltip"
+          },
+          {
+            "Key": "Charset",
+            "Label": "i18n:col_charset",
+            "Type": "select",
+            "Width": 100,
+            "Tooltip": "i18n:col_charset_tooltip",
+            "SelectOptions": [
+              { "Label": "i18n:charset_alphanumeric", "Value": "alphanumeric" },
+              { "Label": "i18n:charset_letters", "Value": "letters" },
+              { "Label": "i18n:charset_upper", "Value": "upper" },
+              { "Label": "i18n:charset_lower", "Value": "lower" },
+              { "Label": "i18n:charset_digits", "Value": "digits" },
+              { "Label": "i18n:charset_hex", "Value": "hex" },
+              { "Label": "i18n:charset_custom", "Value": "custom" }
+            ]
+          },
+          {
+            "Key": "CustomChars",
+            "Label": "i18n:col_custom_chars",
+            "Type": "text",
+            "HideInTable": true,
+            "Tooltip": "i18n:col_custom_chars_tooltip"
+          },
+          {
+            "Key": "NoRepeat",
+            "Label": "i18n:col_no_repeat",
+            "Type": "checkbox",
+            "Width": 90,
+            "Tooltip": "i18n:col_no_repeat_tooltip"
+          }
+        ]
+      }
+    },
+    {
+      "Type": "checkbox",
+      "Value": {
+        "Key": "EnablePresets",
+        "Label": "i18n:setting_enable_presets",
+        "DefaultValue": "true",
+        "Tooltip": "i18n:setting_enable_presets_tooltip"
+      }
+    },
+    {
+      "Type": "checkbox",
+      "Value": {
+        "Key": "AutoCopy",
+        "Label": "i18n:setting_autocopy",
+        "DefaultValue": "true",
+        "Tooltip": "i18n:setting_autocopy_tooltip"
+      }
+    }
+  ]
+}
