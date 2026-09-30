@@ -4,14 +4,25 @@
   "Description": "i18n:plugin_description",
   "Author": "Flartiny",
   "Version": "1.0.0",
-  "MinWoxVersion": "2.0.0",
-  "Runtime": "python",
+  "MinWoxVersion": "2.4.0",
+  "Runtime": "PYTHON",
   "Entry": "main.py",
   "Icon": "emoji:🎲",
-  "TriggerKeywords": ["rand", "random"],
-  "SupportedOS": ["Windows", "Darwin", "Linux"],
+  "TriggerKeywords": [
+    "rand",
+    "random"
+  ],
+  "SupportedOS": [
+    "Windows",
+    "Darwin",
+    "Linux"
+  ],
   "Website": "",
   "Commands": [
+    {
+      "Command": "preset",
+      "Description": "i18n:cmd_preset_desc"
+    },
     {
       "Command": "history",
       "Description": "i18n:cmd_history_desc"
@@ -44,7 +55,12 @@
             "Label": "i18n:col_name",
             "Type": "text",
             "Width": 120,
-            "Validators": [{ "Type": "not_empty", "Value": {} }]
+            "Validators": [
+              {
+                "Type": "not_empty",
+                "Value": {}
+              }
+            ]
           },
           {
             "Key": "Type",
@@ -52,11 +68,26 @@
             "Type": "select",
             "Width": 80,
             "SelectOptions": [
-              { "Label": "i18n:type_integer", "Value": "integer" },
-              { "Label": "i18n:type_decimal", "Value": "decimal" },
-              { "Label": "i18n:type_string", "Value": "string" },
-              { "Label": "i18n:type_uuid", "Value": "uuid" },
-              { "Label": "i18n:type_port", "Value": "port" }
+              {
+                "Label": "i18n:type_integer",
+                "Value": "integer"
+              },
+              {
+                "Label": "i18n:type_decimal",
+                "Value": "decimal"
+              },
+              {
+                "Label": "i18n:type_string",
+                "Value": "string"
+              },
+              {
+                "Label": "i18n:type_uuid",
+                "Value": "uuid"
+              },
+              {
+                "Label": "i18n:type_port",
+                "Value": "port"
+              }
             ]
           },
           {
@@ -94,13 +125,34 @@
             "Width": 100,
             "Tooltip": "i18n:col_charset_tooltip",
             "SelectOptions": [
-              { "Label": "i18n:charset_alphanumeric", "Value": "alphanumeric" },
-              { "Label": "i18n:charset_letters", "Value": "letters" },
-              { "Label": "i18n:charset_upper", "Value": "upper" },
-              { "Label": "i18n:charset_lower", "Value": "lower" },
-              { "Label": "i18n:charset_digits", "Value": "digits" },
-              { "Label": "i18n:charset_hex", "Value": "hex" },
-              { "Label": "i18n:charset_custom", "Value": "custom" }
+              {
+                "Label": "i18n:charset_alphanumeric",
+                "Value": "alphanumeric"
+              },
+              {
+                "Label": "i18n:charset_letters",
+                "Value": "letters"
+              },
+              {
+                "Label": "i18n:charset_upper",
+                "Value": "upper"
+              },
+              {
+                "Label": "i18n:charset_lower",
+                "Value": "lower"
+              },
+              {
+                "Label": "i18n:charset_digits",
+                "Value": "digits"
+              },
+              {
+                "Label": "i18n:charset_hex",
+                "Value": "hex"
+              },
+              {
+                "Label": "i18n:charset_custom",
+                "Value": "custom"
+              }
             ]
           },
           {
@@ -118,15 +170,6 @@
             "Tooltip": "i18n:col_no_repeat_tooltip"
           }
         ]
-      }
-    },
-    {
-      "Type": "checkbox",
-      "Value": {
-        "Key": "EnablePresets",
-        "Label": "i18n:setting_enable_presets",
-        "DefaultValue": "true",
-        "Tooltip": "i18n:setting_enable_presets_tooltip"
       }
     },
     {

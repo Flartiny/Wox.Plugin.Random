@@ -109,13 +109,13 @@ def test_store_corrupt_file(tmp_path):
     assert store.used_values("x") == frozenset({"v"})
 
 
-def test_preset_profiles_are_valid():
-    from presets import PRESET_PROFILES
+def test_preset_templates_are_valid():
+    from presets import PRESET_TEMPLATES
 
-    for preset in PRESET_PROFILES:
-        rule = preset["profile"]
+    for template in PRESET_TEMPLATES:
+        rule = template["row"]
         generator.profile_type(rule)
         v = generator.generate(rule)
         assert v
-    port = int(generator.generate(PRESET_PROFILES[0]["profile"]))
+    port = int(generator.generate(PRESET_TEMPLATES[0]["row"]))
     assert 1024 <= port <= 65535

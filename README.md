@@ -5,24 +5,29 @@
 ## 功能
 
 - **多种生成类型**：整数、小数、字符串、UUID v4、端口
-- **Profile（规则档案）**：每条规则可独立设置类型、范围（Min/Max）、小数位、长度、字符集、防重复开关，在 Wox 设置界面中以表格方式增删改
-- **防重复**：开启后同一 Profile 内绝不生成重复值；历史持久化在插件目录 `data/used_values.json`，重启 Wox 依然有效；值域耗尽时自动清空历史并重新开始
-- **系统预设**：
+- **Profile（规则档案）**：每条规则可独立设置类型、范围（Min/Max）、小数位、长度、字符集，在 Wox 设置界面中以表格方式增删改
+- **防重复**：每个 Profile 独立开关（设置表格中勾选，或在结果上用"切换防重复"动作）；开启后同一 Profile 内绝不生成重复值，历史持久化在插件目录 `data/used_values.json`，重启 Wox 依然有效；值域耗尽时自动清空历史并重新开始
+- **系统预设模板**（`rand preset` 命令，用于快速创建 Profile）：
   - 可用端口（部署服务）：1024–65535 随机端口，并实际探测本机端口可绑定后才返回
   - UUID v4
   - 6 位数字验证码
   - 16 位强密码（字母+数字）
+
+> 预设只是模板：同一个预设可以创建多条 Profile（比如两台服务器各建一条"可用端口"），每条的防重复历史完全独立。
 - **生成即复制**：回车生成后自动复制到剪贴板（可在设置中关闭），并通过通知展示
 
 ## 使用
 
 | 输入 | 行为 |
 |---|---|
-| `rand` | 列出所有 Profile（含系统预设），回车生成并复制 |
+| `rand` | 列出所有 Profile，回车生成并复制 |
 | `rand 订单` | 按名称过滤 Profile |
+| `rand preset` | 从预设模板创建新 Profile（同名自动编号） |
 | `rand history` | 选择 Profile 查看历史生成值（可复制） |
 | `rand history 订单` | 直接查看指定 Profile 的历史 |
 | `rand reset` / `rand reset 订单` | 清空 Profile 的防重复历史 |
+
+Profile 结果上还有两个次级动作：**切换防重复**（无需打开设置页）和**重置历史**。
 
 触发关键字：`rand`、`random`。
 
@@ -31,7 +36,6 @@
 在 Wox 设置 → 插件 → Random 中：
 
 - **生成规则（Profile）表格**：名称 / 类型 / 最小值 / 最大值 / 小数位 / 长度 / 字符集 / 自定义字符 / 防重复
-- **显示系统预设规则**：关闭后只显示自定义 Profile
 - **生成后自动复制**：默认开启
 
 ## 开发
@@ -39,7 +43,10 @@
 ```bash
 uv sync --all-groups   # 安装依赖（含 pytest）
 uv run pytest          # 运行测试
+python package.py      # 生成 wox.plugin.Random.wox
 ```
+
+发布时将 `wox.plugin.Random.wox` 作为 GitHub Release asset 上传；Wox Store 条目应使用该文件的 `releases/latest/download/wox.plugin.Random.wox` 地址。
 
 代码结构：
 
@@ -60,4 +67,10 @@ python build.py        # 每次改完源码执行一次；Wox 会监听 dist/ �
 
 首次安装：在 Wox 里执行 `wpm dev.add <插件目录路径>`（或设置里的 WPM 界面添加），之后运行 `wpm dev.reload` 或重启 Wox 即可加载。防重复历史保存在 `dist/data/`，重新 build 不会丢失。
 
+> 实现细节：Wox 的 Python 宿主重载插件时只清理入口模块（`main`）的缓存，`main.py` 会在导入时主动清理 `generator/presets/storage` 的模块缓存，保证每次重载都使用 dist 里的最新代码，无需重启 Wox。
+
 > 注意：`wox-plugin` SDK 由 Wox 的 Python 宿主环境提供，插件本体无需额外安装第三方依赖。
+
+## 许可证
+
+[MIT License](LICENSE)

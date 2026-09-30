@@ -1,29 +1,34 @@
-"""System preset profiles built into the plugin."""
+"""Preset templates for creating user profiles.
+
+Presets are NOT runnable profiles themselves: each one is instantiated into a
+normal user profile (stored in the Profiles table setting) via the
+``rand preset`` command, so several profiles can be created from the same
+preset with independent no-repeat histories (e.g. one per server).
+"""
 
 from __future__ import annotations
 
-# Each preset: stable "key" (used as the no-repeat history key), a name
-# translation key, and a profile rule dict with the same columns as the
-# user-defined Profiles table setting.
-PRESET_PROFILES = [
+# Each template: stable "key", a name translation key, and the rule columns
+# for the Profiles table row (same keys as the setting columns).
+PRESET_TEMPLATES = [
     {
-        "key": "preset:port",
+        "key": "port",
         "name_key": "preset_port_name",
-        "profile": {"Type": "port", "Min": "1024", "Max": "65535", "NoRepeat": True},
+        "row": {"Type": "port", "Min": "1024", "Max": "65535", "NoRepeat": True},
     },
     {
-        "key": "preset:uuid",
+        "key": "uuid",
         "name_key": "preset_uuid_name",
-        "profile": {"Type": "uuid", "NoRepeat": True},
+        "row": {"Type": "uuid", "NoRepeat": True},
     },
     {
-        "key": "preset:code6",
+        "key": "code6",
         "name_key": "preset_code6_name",
-        "profile": {"Type": "string", "Length": "6", "Charset": "digits", "NoRepeat": False},
+        "row": {"Type": "string", "Length": "6", "Charset": "digits", "NoRepeat": False},
     },
     {
-        "key": "preset:password",
+        "key": "password",
         "name_key": "preset_password_name",
-        "profile": {"Type": "string", "Length": "16", "Charset": "alphanumeric", "NoRepeat": False},
+        "row": {"Type": "string", "Length": "16", "Charset": "alphanumeric", "NoRepeat": False},
     },
 ]

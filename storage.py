@@ -73,3 +73,18 @@ class UsedStore:
             if key in self._data:
                 del self._data[key]
                 self._save()
+
+    def rename(self, old_key: str, new_key: str) -> None:
+        """Move history from old_key to new_key (merging if new_key already has entries)."""
+        with self._lock:
+            entries = self._data.pop(old_key, None)
+            if not entries:
+                return
+            existing = self._data.get(new_key)
+            if existing is None:
+                self._data[new_key] = entries
+            else:
+                seen = {e["v"] for e in existing}
+                existing.extend(e for e in entries if e["v"] not in seen)
+                del existing[: max(0, len(existing) - MAX_ENTRIES_PER_KEY)]
+            self._save()

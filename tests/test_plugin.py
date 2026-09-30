@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import os
 import tempfile
 
 import main
@@ -19,6 +20,10 @@ class FakeAPI:
     async def get_setting(self, ctx, key):
         return self.settings.get(key, "")
 
+    async def set_setting(self, ctx, option):
+        self.settings[option.key] = option.value
+        return type("R", (), {"success": True, "errmsg": ""})()
+
     async def get_translation(self, ctx, key):
         return key  # unresolved -> falls back to English dict
 
@@ -30,6 +35,9 @@ class FakeAPI:
 
     async def change_query(self, ctx, param):
         self.queries.append(param.query_text)
+
+    async def refresh_query(self, ctx, param):
+        self.refreshed = True
 
     async def log(self, ctx, level, msg):
         pass
@@ -50,9 +58,7 @@ def make_plugin(settings=None):
     plugin = main.RandomNumberPlugin()
     plugin.api = FakeAPI(settings)
     plugin.plugin_directory = tempfile.mkdtemp()
-    plugin.store = UsedStore(
-        __import__("os").path.join(plugin.plugin_directory, "data", "used_values.json")
-    )
+    plugin.store = UsedStore(os.path.join(plugin.plugin_directory, "data", "used_values.json"))
     return plugin
 
 
@@ -60,7 +66,7 @@ def run(coro):
     return asyncio.run(coro)
 
 
-def test_generate_query_lists_profiles():
+def test_generate_query_lists_only_user_profiles():
     plugin = make_plugin({
         "Profiles": json.dumps([
             {"Name": "幸运数字", "Type": "integer", "Min": "1", "Max": "100", "NoRepeat": False},
@@ -68,10 +74,9 @@ def test_generate_query_lists_profiles():
         ])
     })
     response = run(plugin.query(FakeCtx(), FakeQuery()))
-    names = [r.title for r in response.results]
-    assert names == ["幸运数字", "订单号", "Available port (deploy)", "UUID v4", "6-digit code", "Strong password (16)"]
+    assert [r.title for r in response.results] == ["幸运数字", "订单号"]
     assert all("Peek:" in r.sub_title or "Invalid rule" in r.sub_title for r in response.results)
-    assert all(r.actions for r in response.results)
+    assert all(len(r.actions) == 4 for r in response.results)  # generate / rename / toggle / reset
 
 
 def test_search_filters_profiles():
@@ -80,8 +85,6 @@ def test_search_filters_profiles():
     })
     response = run(plugin.query(FakeCtx(), FakeQuery(search="订单")))
     assert [r.title for r in response.results] == ["订单号"]
-    response = run(plugin.query(FakeCtx(), FakeQuery(search="uuid")))
-    assert [r.title for r in response.results] == ["UUID v4"]
     response = run(plugin.query(FakeCtx(), FakeQuery(search="nope")))
     assert response.results == []
 
@@ -117,6 +120,58 @@ def test_exhausted_history_resets():
     assert any("history was reset" in n for n in plugin.api.notifications)
 
 
+def test_toggle_no_repeat_action():
+    plugin = make_plugin({
+        "Profiles": json.dumps([{"Name": "小", "Type": "integer", "Min": "1", "Max": "100", "NoRepeat": False}]),
+    })
+    result = run(plugin.query(FakeCtx(), FakeQuery(search="小"))).results[0]
+    toggle = result.actions[2]
+    run(toggle.action(None, None))
+    rows = json.loads(plugin.api.settings["Profiles"])
+    assert rows[0]["NoRepeat"] is True
+    assert any("No-repeat enabled" in n for n in plugin.api.notifications)
+    run(toggle.action(None, None))
+    rows = json.loads(plugin.api.settings["Profiles"])
+    assert rows[0]["NoRepeat"] is False
+
+
+def test_preset_command_lists_templates():
+    plugin = make_plugin()
+    response = run(plugin.query(FakeCtx(), FakeQuery(command="preset")))
+    assert [r.title for r in response.results] == [
+        "Available port (deploy)", "UUID v4", "6-digit code", "Strong password (16)"
+    ]
+
+
+def test_preset_search_filters():
+    plugin = make_plugin()
+    response = run(plugin.query(FakeCtx(), FakeQuery(command="preset", search="uuid")))
+    assert [r.title for r in response.results] == ["UUID v4"]
+
+
+def test_preset_create_profile():
+    plugin = make_plugin()
+    response = run(plugin.query(FakeCtx(), FakeQuery(command="preset")))
+    run(response.results[0].actions[0].action(None, None))  # create the port profile
+    rows = json.loads(plugin.api.settings["Profiles"])
+    assert len(rows) == 1
+    assert rows[0]["Name"] == "Available port (deploy)"
+    assert rows[0]["Type"] == "port"
+    assert rows[0]["NoRepeat"] is True
+    assert any("Profile created" in n for n in plugin.api.notifications)
+    assert plugin.api.queries == ["rand"]  # switches back to the profile list
+
+
+def test_preset_create_dedupes_names():
+    plugin = make_plugin({
+        "Profiles": json.dumps([{"Name": "Available port (deploy)", "Type": "port", "NoRepeat": True}]),
+    })
+    response = run(plugin.query(FakeCtx(), FakeQuery(command="preset")))
+    run(response.results[0].actions[0].action(None, None))
+    rows = json.loads(plugin.api.settings["Profiles"])
+    assert [r["Name"] for r in rows] == ["Available port (deploy)", "Available port (deploy) 2"]
+
+
 def test_reset_action_clears_history():
     plugin = make_plugin({
         "Profiles": json.dumps([{"Name": "小", "Type": "integer", "Min": "1", "Max": "100", "NoRepeat": True}]),
@@ -136,7 +191,7 @@ def test_history_flow():
 
     # empty search -> profile list
     response = run(plugin.query(FakeCtx(), FakeQuery(command="history")))
-    assert [r.title for r in response.results] == ["小", "Available port (deploy)", "UUID v4", "6-digit code", "Strong password (16)"]
+    assert [r.title for r in response.results] == ["小"]
 
     # search -> values, newest first
     response = run(plugin.query(FakeCtx(), FakeQuery(command="history", search="小")))
@@ -155,7 +210,64 @@ def test_invalid_profile_shows_error_not_crash():
     assert any("Invalid rule" in n for n in plugin.api.notifications)
 
 
-def test_presets_can_be_disabled():
-    plugin = make_plugin({"EnablePresets": "false"})
-    response = run(plugin.query(FakeCtx(), FakeQuery()))
-    assert response.results == []
+def test_reload_purges_stale_helper_modules():
+    """Reproduces the Wox host reload bug: helper modules stay cached in
+    sys.modules across reloads; main.py must drop them before importing."""
+    import importlib
+    import sys
+    import types
+
+    stale = types.ModuleType("presets")  # old version without PRESET_TEMPLATES
+    sys.modules["presets"] = stale
+    try:
+        importlib.reload(main)  # must not raise ImportError
+        import presets
+
+        assert hasattr(presets, "PRESET_TEMPLATES")
+    finally:
+        importlib.reload(main)  # restore a clean import state for other tests
+
+
+class FakeFormCtx:
+    def __init__(self, values):
+        self.values = values
+
+
+def test_rename_profile_migrates_history():
+    plugin = make_plugin({
+        "Profiles": json.dumps([{"Name": "旧名", "Type": "integer", "Min": "1", "Max": "100", "NoRepeat": True}]),
+    })
+    plugin.store.record("user:旧名", "42")
+    result = run(plugin.query(FakeCtx(), FakeQuery(search="旧名"))).results[0]
+    rename = result.actions[1]
+    assert rename.type == "form"
+
+    run(rename.on_submit(FakeCtx(), FakeFormCtx({"new_name": "  新名 "})))
+    rows = json.loads(plugin.api.settings["Profiles"])
+    assert rows[0]["Name"] == "新名"
+    # history migrated to the new name
+    assert plugin.store.used_values("user:新名") == frozenset({"42"})
+    assert plugin.store.count("user:旧名") == 0
+    assert any("renamed" in n for n in plugin.api.notifications)
+    assert plugin.api.queries == ["rand"]  # back to the full profile list
+
+
+def test_rename_rejects_duplicate_and_empty():
+    plugin = make_plugin({
+        "Profiles": json.dumps([
+            {"Name": "A", "Type": "integer", "Min": "1", "Max": "2"},
+            {"Name": "B", "Type": "integer", "Min": "1", "Max": "2"},
+        ]),
+    })
+    plugin.store.record("user:A", "1")
+    result = run(plugin.query(FakeCtx(), FakeQuery(search="A"))).results[0]
+    rename = result.actions[1]
+
+    run(rename.on_submit(FakeCtx(), FakeFormCtx({"new_name": "B"})))
+    assert any("already exists" in n for n in plugin.api.notifications)
+    assert [r["Name"] for r in json.loads(plugin.api.settings["Profiles"])] == ["A", "B"]
+    assert plugin.store.used_values("user:A") == frozenset({"1"})
+
+    run(rename.on_submit(FakeCtx(), FakeFormCtx({"new_name": "   "})))
+    assert any("must not be empty" in n for n in plugin.api.notifications)
+    assert [r["Name"] for r in json.loads(plugin.api.settings["Profiles"])] == ["A", "B"]
